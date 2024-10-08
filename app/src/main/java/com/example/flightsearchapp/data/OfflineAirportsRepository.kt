@@ -1,5 +1,8 @@
 package com.example.flightsearchapp.data
 
-class OfflineAirportsRepository(private val airportDao: AirportDao) : AirportsRepository{
+import kotlinx.coroutines.flow.Flow
+
+class OfflineAirportsRepository(private val airportDao: AirportDao) : AirportsRepository {
+    override fun getAllAirports(): Flow<List<Airport>> = airportDao.getAllAirports()
 
 }

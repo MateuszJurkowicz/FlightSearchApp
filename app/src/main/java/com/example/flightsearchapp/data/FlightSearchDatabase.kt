@@ -20,7 +20,8 @@ abstract class FlightSearchDatabase : RoomDatabase() {
                     FlightSearchDatabase::class.java,
                     "flight_search_database"
                 )
-                    .createFromAsset("database/flight_search.db")
+                    .createFromAsset("flight_search.db")
+                    .fallbackToDestructiveMigrationFrom()
                     .build()
                     .also { Instance = it }
             }

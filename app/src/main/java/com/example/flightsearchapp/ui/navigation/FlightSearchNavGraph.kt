@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.example.flightsearchapp.ui.home.HomeDestination
+import com.example.flightsearchapp.ui.home.HomeScreen
 
 @Composable
 fun FlightSearchNavHost(
@@ -12,10 +15,10 @@ fun FlightSearchNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = FlightSearchScreen.Start.name,
+        startDestination = HomeDestination.route,
         modifier = modifier
     ) {
-        composable(route = FlightSearchScreen.Start.name) {
+        composable(route = HomeDestination.route) {
             HomeScreen(
 
             )
