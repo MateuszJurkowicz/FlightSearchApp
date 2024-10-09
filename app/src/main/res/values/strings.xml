@@ -6,4 +6,7 @@
     <string name="search_flights">Search</string>
     <string name="close">Close</string>
     <string name="chevron">Chevron icon</string>
+    <string name="depart">DEPART</string>
+    <string name="arrive">ARRIVE</string>
+    <string name="favorite_button">Favorite button</string>
 </resources>

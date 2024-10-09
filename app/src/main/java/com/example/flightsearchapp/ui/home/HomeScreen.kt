@@ -1,8 +1,7 @@
 package com.example.flightsearchapp.ui.home
 
-import android.annotation.SuppressLint
-import android.inputmethodservice.Keyboard
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,10 +36,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.flightsearchapp.FlightSearchTopAppBar
 import com.example.flightsearchapp.R
 import com.example.flightsearchapp.data.Airport
 import com.example.flightsearchapp.ui.AppViewModelProvider
+import com.example.flightsearchapp.ui.components.FlightSearchTopAppBar
 import com.example.flightsearchapp.ui.components.SearchInputField
 import com.example.flightsearchapp.ui.navigation.NavigationDestination
 
@@ -49,7 +48,6 @@ object HomeDestination : NavigationDestination {
     override val titleRes = R.string.app_name
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -57,7 +55,6 @@ fun HomeScreen(
     val homeUiState by viewModel.homeUiState.collectAsState()
     val searchFieldState by viewModel.searchFieldState.collectAsState()
     val inputText by viewModel.inputText.collectAsState()
-
     val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(null) {
@@ -74,6 +71,16 @@ fun HomeScreen(
         onChevronClicked = {
             viewModel.revertToInitialState()
             keyboardController?.hide()
+        },
+        onItemClicked = {
+            viewModel.onItemClicked(
+                Airport(
+                    id = it.id,
+                    name = it.name,
+                    iataCode = it.iataCode,
+                    passengers = it.passengers
+                )
+            )
         }
     )
 }
@@ -88,6 +95,7 @@ fun SearchScreenLayout(
     onSearchInputClicked: () -> Unit,
     onClearInputClicked: () -> Unit,
     onChevronClicked: () -> Unit,
+    onItemClicked: (Airport) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -97,7 +105,7 @@ fun SearchScreenLayout(
             FlightSearchTopAppBar(
                 title = stringResource(HomeDestination.titleRes),
                 canNavigateBack = false,
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
             )
         }
     )
@@ -114,9 +122,9 @@ fun SearchScreenLayout(
                 onClicked = onSearchInputClicked,
                 onChevronClicked = onChevronClicked,
             )
-//            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             when (viewState) {
-                HomeViewModel.HomeUiState.IdleScreen -> {
+                is HomeViewModel.HomeUiState.IdleScreen -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Image(
                             painter = painterResource(id = R.drawable.undraw_search),
@@ -125,108 +133,64 @@ fun SearchScreenLayout(
                         )
                     }
                 }
-                HomeViewModel.HomeUiState.Loading -> {
+
+                is HomeViewModel.HomeUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
-                HomeViewModel.HomeUiState.Error -> {
+
+                is HomeViewModel.HomeUiState.Error -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = "Error :(", color = MaterialTheme.colorScheme.error)
                     }
                 }
-                HomeViewModel.HomeUiState.NoResults -> {
+
+                is HomeViewModel.HomeUiState.NoResults -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = "No results for this input :(")
                     }
                 }
+
                 is HomeViewModel.HomeUiState.SearchResultsFetched -> {
                     val airports by viewState.airports.collectAsState(initial = emptyList()) // Collect the flow
-                    HomeBody(
+                    SuggestionsBody(
                         airports = airports, // Pass the collected list
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        onItemClicked = onItemClicked
+                    )
+                }
+                is HomeViewModel.HomeUiState.SearchResultClicked -> {
+                    val flightsTo by viewState.flightsTo.collectAsState(initial = emptyList()) // Collect the flow
+                    val flightsFrom = viewState.flightsFrom
+                    FlightsBody(
+                        flightsFrom = flightsFrom, // Pass the collected list
+                        flightsTo = flightsTo,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
-
-        }
-
-    }
-
-}
-
-
-@Composable
-fun HomeBody(
-    airports: List<Airport>,
-    modifier: Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
-) {
-    LazyColumn(
-        contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier
-    ) {
-        if (airports.isEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.no_data),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-            }
-
-        } else {
-            items(items = airports, key = { it.id }) { airport ->
-                AirportRow(airport = airport)
-            }
         }
     }
 }
 
-@Composable
-fun AirportRow(airport: Airport) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = airport.iataCode,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(50.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = airport.name,
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeBodyPreview() {
-
-}
 
 @Preview(showBackground = true)
 @Composable
 fun HomeBodyEmptyPreview() {
-    HomeBody(listOf(), Modifier)
+    SuggestionsBody(listOf(), onItemClicked = {}, modifier = Modifier)
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     Column {
-        HomeBody(
+        SuggestionsBody(
             listOf(
                 Airport(1, "Warsaw Airport", "COA", 911),
                 Airport(2, "Decatur Central Airport", "DEC", 855)
-            ), Modifier
+            ), Modifier,
+            onItemClicked = {}
         )
     }
 }

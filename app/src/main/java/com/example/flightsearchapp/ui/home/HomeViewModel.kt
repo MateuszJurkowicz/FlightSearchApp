@@ -1,5 +1,6 @@
 package com.example.flightsearchapp.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flightsearchapp.data.Airport
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -25,6 +27,10 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
         object Error : HomeUiState
         object NoResults : HomeUiState
         data class SearchResultsFetched(val airports: Flow<List<Airport>>) : HomeUiState
+        data class SearchResultClicked(
+            val flightsFrom: Airport,
+            val flightsTo: Flow<List<Airport>>
+        ) : HomeUiState
     }
 
     sealed interface SearchFieldState {
@@ -108,12 +114,27 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
         }
     }
 
-    private fun String.blankOrEmpty() = this.isBlank() || this.isEmpty()
+    fun onItemClicked(airport: Airport) {
+        when (val result = getSearchResults("")) {
+            is GetSearchResults.Result.Success -> {
+                _homeUiState.update {
+                    HomeUiState.SearchResultClicked(
+                        airport,
+                        result.airports.map { airports ->
+                            airports.filter { it.id != airport.id } // Filter individual airports
+                        }
+                    )
+                }
+            }
+            is GetSearchResults.Result.Error -> {
+                _homeUiState.update { HomeUiState.Error }
+            }
+        }
+    }
 
+    private fun String.blankOrEmpty() = this.isBlank() || this.isEmpty()
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_00L
     }
-
-
 }

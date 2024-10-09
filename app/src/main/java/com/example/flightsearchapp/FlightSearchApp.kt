@@ -20,29 +20,3 @@ import com.example.flightsearchapp.ui.navigation.FlightSearchNavHost
 fun FlightSearchApp(navController: NavHostController = rememberNavController()) {
     FlightSearchNavHost(navController = navController)
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FlightSearchTopAppBar(
-    modifier: Modifier = Modifier,
-    title: String,
-    canNavigateBack: Boolean,
-    navigateUp: () -> Unit = {},
-    scrollBehavior: TopAppBarScrollBehavior? = null
-) {
-    CenterAlignedTopAppBar(
-        title = { Text(text = title) },
-        modifier = modifier,
-        scrollBehavior = scrollBehavior,
-        navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_button)
-                    )
-                }
-            }
-        }
-    )
-}

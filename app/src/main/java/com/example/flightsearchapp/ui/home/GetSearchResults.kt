@@ -12,7 +12,7 @@ class GetSearchResults(private val airportsRepository: AirportsRepository) {
         data class Success(val airports: Flow<List<Airport>>) : Result
     }
 
-    suspend operator fun invoke(searchTerm: String): Result = try {
+    operator fun invoke(searchTerm: String): Result = try {
         val airports = airportsRepository.getAllAirports(searchTerm)
         Result.Success(airports = airports)
     } catch (e: IOException) {
