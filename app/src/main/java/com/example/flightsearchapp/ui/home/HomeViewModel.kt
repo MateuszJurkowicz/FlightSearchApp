@@ -1,28 +1,31 @@
 package com.example.flightsearchapp.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.flightsearchapp.data.Airport
-import com.example.flightsearchapp.data.AirportsRepository
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.favorite.Favorite
+import com.example.flightsearchapp.data.favorite.FavoritesRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel() {
+class HomeViewModel(
+    private val getSearchResults: GetSearchResults,
+    private val favoritesRepository: FavoritesRepository
+) : ViewModel() {
 
     sealed interface HomeUiState {
-        object IdleScreen : HomeUiState
+        data class IdleScreen(val favorites: Flow<List<Favorite>>) : HomeUiState
         object Loading : HomeUiState
         object Error : HomeUiState
         object NoResults : HomeUiState
@@ -45,7 +48,7 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
     val searchFieldState: StateFlow<SearchFieldState> = _searchFieldState
 
     private val _homeUiState: MutableStateFlow<HomeUiState> =
-        MutableStateFlow(HomeUiState.IdleScreen)
+        MutableStateFlow(HomeUiState.IdleScreen(favoritesRepository.getAllFavorites()))
     val homeUiState: StateFlow<HomeUiState> = _homeUiState
 
     private val _inputText: MutableStateFlow<String> = MutableStateFlow("")
@@ -59,7 +62,7 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
             viewModelScope.launch {
                 inputText.debounce(timeoutMillis = TIMEOUT_MILLIS).collectLatest { input ->
                     if (input.blankOrEmpty()) {
-                        _homeUiState.update { HomeUiState.IdleScreen }
+                        _homeUiState.update { HomeUiState.IdleScreen(favoritesRepository.getAllFavorites()) }
                         return@collectLatest
                     }
                     when (val result = getSearchResults(input)) {
@@ -82,6 +85,9 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
         }
     }
 
+    suspend fun getAirportByIataCode(iataCode: String): Airport {
+        return getSearchResults.getAirportByIataCode(iataCode).first()
+    }
 
     fun updateInput(inputText: String) {
         _inputText.update { inputText }
@@ -126,8 +132,34 @@ class HomeViewModel(private val getSearchResults: GetSearchResults) : ViewModel(
                     )
                 }
             }
+
             is GetSearchResults.Result.Error -> {
                 _homeUiState.update { HomeUiState.Error }
+            }
+        }
+    }
+
+    fun isFavorite(flightFrom: Airport, flightTo: Airport): Boolean {
+        var isFavorite = false
+        viewModelScope.launch {
+            val favorite = favoritesRepository.getFavoriteByIataCode(flightFrom.iataCode, flightTo.iataCode).firstOrNull()
+            isFavorite = favorite != null
+        }
+        return isFavorite
+    }
+
+
+
+    fun onFavoriteClicked(flightsFrom: Airport, flightTo: Airport) {
+        viewModelScope.launch {
+            val existingFavorite =
+                favoritesRepository.getFavoriteByIataCode(flightsFrom.iataCode, flightTo.iataCode)
+                    .firstOrNull()
+            if (existingFavorite != null) {
+                favoritesRepository.deleteFavorite(existingFavorite) // Delete if exists
+            } else {
+                val favorite = Favorite(0, flightsFrom.iataCode, flightTo.iataCode)
+                favoritesRepository.insertFavorite(favorite) // Insert if not exists
             }
         }
     }

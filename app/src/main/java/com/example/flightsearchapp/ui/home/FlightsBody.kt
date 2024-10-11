@@ -23,6 +23,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,13 +38,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.flightsearchapp.R
-import com.example.flightsearchapp.data.Airport
+import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.ui.theme.color_blue
 import com.example.flightsearchapp.ui.theme.color_dark_silver
 import com.example.flightsearchapp.ui.theme.color_silver
-import com.example.flightsearchapp.ui.theme.color_soft_silver
 
 @Composable
-fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifier = Modifier) {
+fun FlightsBody(
+    flightsFrom: Airport,
+    flightsTo: List<Airport>,
+    onFavoriteClicked: (Airport, Airport) -> Unit = { _, _ -> },
+    viewModel: HomeViewModel,
+    modifier: Modifier = Modifier,
+) {
     Column()
     {
         Text(
@@ -53,9 +64,12 @@ fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifi
             modifier = modifier.fillMaxSize()
         ) {
             items(items = flightsTo, key = { it.id }) { flightTo ->
+                val isFavorite = viewModel.isFavorite(flightsFrom, flightTo)
                 FlightCard(
                     flightFrom = flightsFrom,
-                    flightTo = flightTo
+                    flightTo = flightTo,
+                    onFavoriteClicked = onFavoriteClicked,
+                    isFavorite = isFavorite
                 )
             }
         }
@@ -63,7 +77,14 @@ fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifi
 }
 
 @Composable
-fun FlightCard(flightFrom: Airport, flightTo: Airport) {
+fun FlightCard(
+    flightFrom: Airport,
+    flightTo: Airport,
+    onFavoriteClicked: (Airport, Airport) -> Unit,
+    isFavorite: Boolean
+) {
+    val starColor = if (isFavorite) color_dark_silver else color_blue
+
     Card(
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp)
@@ -76,9 +97,10 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
     {
         Row(modifier = Modifier.fillMaxWidth())
         {
-            Column(modifier = Modifier
-                .padding(16.dp)
-                .weight(1f)
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f)
             )
             {
                 Text(
@@ -137,12 +159,12 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
             )
             {
                 IconButton(
-                    onClick = { /*TODO*/ }
+                    onClick = { onFavoriteClicked(flightFrom, flightTo) }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = stringResource(id = R.string.favorite_button),
-                        tint = color_dark_silver,
+                        tint = starColor,
                         modifier = Modifier.size(100.dp)
                     )
                 }
@@ -151,14 +173,14 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun FlightsBodyPreview() {
-    FlightsBody(
-        flightsFrom = Airport(1, "Warsaw Airport", "COA", 911),
-        flightsTo = listOf(
-            Airport(2, "Decatur Central Airport", "DEC", 855),
-            Airport(3, "Indonesia International Airport", "IND", 855),
-        )
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun FlightsBodyPreview() {
+//    FlightsBody(
+//        flightsFrom = Airport(1, "Warsaw Airport", "COA", 911),
+//        flightsTo = listOf(
+//            Airport(2, "Decatur Central Airport", "DEC", 855),
+//            Airport(3, "Indonesia International Airport", "IND", 855),
+//        ),
+//    )
+//}

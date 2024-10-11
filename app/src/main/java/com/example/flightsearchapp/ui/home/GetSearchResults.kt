@@ -1,14 +1,15 @@
 package com.example.flightsearchapp.ui.home
 
-import com.example.flightsearchapp.data.Airport
-import com.example.flightsearchapp.data.AirportsRepository
+import androidx.compose.runtime.collectAsState
+import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.airport.AirportsRepository
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
 
 class GetSearchResults(private val airportsRepository: AirportsRepository) {
 
     sealed interface Result {
-        object Error: Result
+        object Error : Result
         data class Success(val airports: Flow<List<Airport>>) : Result
     }
 
@@ -17,5 +18,9 @@ class GetSearchResults(private val airportsRepository: AirportsRepository) {
         Result.Success(airports = airports)
     } catch (e: IOException) {
         Result.Error
+    }
+
+    suspend fun getAirportByIataCode(iataCode: String): Flow<Airport> {
+        return airportsRepository.getAirportByIataCode(iataCode)
     }
 }
