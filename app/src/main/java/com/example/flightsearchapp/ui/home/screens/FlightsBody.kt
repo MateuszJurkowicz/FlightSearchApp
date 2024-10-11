@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.ui.home
+package com.example.flightsearchapp.ui.home.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,24 +30,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.flightsearchapp.R
 import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.airport.Flight
+import com.example.flightsearchapp.ui.home.viewModel.HomeViewModel
 import com.example.flightsearchapp.ui.theme.color_blue
 import com.example.flightsearchapp.ui.theme.color_dark_silver
+import com.example.flightsearchapp.ui.theme.color_gold
 import com.example.flightsearchapp.ui.theme.color_silver
 
 @Composable
 fun FlightsBody(
     flightsFrom: Airport,
-    flightsTo: List<Airport>,
-    onFavoriteClicked: (Airport, Airport) -> Unit = { _, _ -> },
-    viewModel: HomeViewModel,
+    flightsTo: List<Flight>,
+    onFavoriteClicked: (flight: Flight) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column()
@@ -63,13 +64,10 @@ fun FlightsBody(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = modifier.fillMaxSize()
         ) {
-            items(items = flightsTo, key = { it.id }) { flightTo ->
-                val isFavorite = viewModel.isFavorite(flightsFrom, flightTo)
+            items(items = flightsTo) { flight ->
                 FlightCard(
-                    flightFrom = flightsFrom,
-                    flightTo = flightTo,
+                    flight = flight,
                     onFavoriteClicked = onFavoriteClicked,
-                    isFavorite = isFavorite
                 )
             }
         }
@@ -78,12 +76,9 @@ fun FlightsBody(
 
 @Composable
 fun FlightCard(
-    flightFrom: Airport,
-    flightTo: Airport,
-    onFavoriteClicked: (Airport, Airport) -> Unit,
-    isFavorite: Boolean
+    flight: Flight,
+    onFavoriteClicked: (flight: Flight) -> Unit,
 ) {
-    val starColor = if (isFavorite) color_dark_silver else color_blue
 
     Card(
         modifier = Modifier
@@ -114,14 +109,14 @@ fun FlightCard(
                 ) {
 
                     Text(
-                        text = flightFrom.iataCode,
+                        text = flight.departure.iataCode,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        text = flightFrom.name,
+                        text = flight.departure.name,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -138,14 +133,14 @@ fun FlightCard(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = flightTo.iataCode,
+                        text = flight.destination.iataCode,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        text = flightTo.name,
+                        text = flight.destination.name,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -158,13 +153,16 @@ fun FlightCard(
                 contentAlignment = Alignment.Center,
             )
             {
+                val iconColor: Color by remember { mutableStateOf(if (flight.favorite) color_gold else color_dark_silver) }
                 IconButton(
-                    onClick = { onFavoriteClicked(flightFrom, flightTo) }
+                    onClick = {
+                        onFavoriteClicked(flight)
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = stringResource(id = R.string.favorite_button),
-                        tint = starColor,
+                        tint = iconColor,
                         modifier = Modifier.size(100.dp)
                     )
                 }
@@ -177,8 +175,8 @@ fun FlightCard(
 //@Composable
 //fun FlightsBodyPreview() {
 //    FlightsBody(
-//        flightsFrom = Airport(1, "Warsaw Airport", "COA", 911),
-//        flightsTo = listOf(
+//        departingAirport = Airport(1, "Warsaw Airport", "COA", 911),
+//        destinationAirports = listOf(
 //            Airport(2, "Decatur Central Airport", "DEC", 855),
 //            Airport(3, "Indonesia International Airport", "IND", 855),
 //        ),

@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.ui.home
+package com.example.flightsearchapp.ui.home.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -28,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flightsearchapp.R
 import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.airport.Flight
 import com.example.flightsearchapp.ui.AppViewModelProvider
-import com.example.flightsearchapp.ui.components.FlightSearchTopAppBar
+import com.example.flightsearchapp.ui.components.AppTopBar
 import com.example.flightsearchapp.ui.components.SearchInputField
+import com.example.flightsearchapp.ui.home.viewModel.HomeViewModel
 import com.example.flightsearchapp.ui.navigation.NavigationDestination
 
 object HomeDestination : NavigationDestination {
@@ -62,18 +64,8 @@ fun HomeScreen(
             viewModel.revertToInitialState()
             keyboardController?.hide()
         },
-        onItemClicked = {
-            viewModel.onItemClicked(
-                Airport(
-                    id = it.id,
-                    name = it.name,
-                    iataCode = it.iataCode,
-                    passengers = it.passengers
-                )
-            )
-        },
+        onItemClicked = viewModel::onItemClicked,
         onFavoriteClicked = viewModel::onFavoriteClicked,
-        viewModel
     )
 }
 
@@ -88,15 +80,14 @@ fun SearchScreenLayout(
     onClearInputClicked: () -> Unit,
     onChevronClicked: () -> Unit,
     onItemClicked: (Airport) -> Unit,
-    onFavoriteClicked: (Airport, Airport) -> Unit,
-    viewModel: HomeViewModel
+    onFavoriteClicked: (flight: Flight) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            FlightSearchTopAppBar(
+            AppTopBar(
                 title = stringResource(HomeDestination.titleRes),
                 canNavigateBack = false,
                 scrollBehavior = scrollBehavior,
@@ -119,19 +110,24 @@ fun SearchScreenLayout(
             Spacer(modifier = Modifier.height(20.dp))
             when (viewState) {
                 is HomeViewModel.HomeUiState.IdleScreen -> {
-                    val favorites by viewState.favorites.collectAsState(initial = emptyList())
-                    FavoritesBody(
-                        favorites = favorites,
-                        onFavoriteClicked = onFavoriteClicked,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-//                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//                        Image(
-//                            painter = painterResource(id = R.drawable.undraw_search),
-//                            contentDescription = "Illustration",
-//                            modifier = Modifier.padding(16.dp)
-//                        )
-//                    }
+                    if (viewState.favoritesList.isNotEmpty()) {
+                        FavoritesBody(
+                            favorites = viewState.favoritesList,
+                            onFavoriteClicked = onFavoriteClicked,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.undraw_search),
+                                contentDescription = "Illustration",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
                 }
 
                 is HomeViewModel.HomeUiState.Loading -> {
@@ -148,7 +144,7 @@ fun SearchScreenLayout(
 
                 is HomeViewModel.HomeUiState.NoResults -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "No results for this input :(")
+                        Text(text = "No results for this input")
                     }
                 }
 
@@ -162,14 +158,14 @@ fun SearchScreenLayout(
                 }
 
                 is HomeViewModel.HomeUiState.SearchResultClicked -> {
-                    val flightsTo by viewState.flightsTo.collectAsState(initial = emptyList()) // Collect the flow
-                    val flightsFrom = viewState.flightsFrom
+                    val flightsFrom = viewState.departingAirport
+                    val flightsTo = viewState.flightsList
                     FlightsBody(
-                        flightsFrom = flightsFrom, // Pass the collected list
+                        flightsFrom = flightsFrom,
                         flightsTo = flightsTo,
                         onFavoriteClicked = onFavoriteClicked,
                         modifier = Modifier.fillMaxSize(),
-                        viewModel = viewModel
+//                        viewModel = viewModel
                     )
                 }
             }

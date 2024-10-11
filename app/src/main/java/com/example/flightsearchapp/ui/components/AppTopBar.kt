@@ -1,6 +1,5 @@
 package com.example.flightsearchapp.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -13,11 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.flightsearchapp.R
-import com.example.flightsearchapp.ui.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FlightSearchTopAppBar(
+fun AppTopBar(
     modifier: Modifier = Modifier,
     title: String,
     canNavigateBack: Boolean,

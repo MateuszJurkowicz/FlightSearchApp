@@ -8,15 +8,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.flightsearchapp.data.airport.Airport
 import com.example.flightsearchapp.data.airport.AirportDao
-import com.example.flightsearchapp.data.favorite.Favorite
-import com.example.flightsearchapp.data.favorite.FavoriteDao
+import com.example.flightsearchapp.data.airport.Favorite
 
 @Database(entities = [Airport::class, Favorite::class], version = 2, exportSchema = false)
 abstract class FlightSearchDatabase : RoomDatabase() {
 
     abstract fun airportDao(): AirportDao
-    abstract fun favoriteDao(): FavoriteDao
-
 
     companion object {
         @Volatile

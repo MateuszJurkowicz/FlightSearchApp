@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.ui.home
+package com.example.flightsearchapp.ui.home.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

@@ -5,8 +5,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.flightsearchapp.ui.home.HomeDestination
-import com.example.flightsearchapp.ui.home.HomeScreen
+import com.example.flightsearchapp.ui.home.screens.HomeDestination
+import com.example.flightsearchapp.ui.home.screens.HomeScreen
 
 @Composable
 fun FlightSearchNavHost(

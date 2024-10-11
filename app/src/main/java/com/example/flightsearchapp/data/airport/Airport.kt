@@ -13,3 +13,19 @@ data class Airport (
     val iataCode: String,
     val passengers: Int
 )
+
+@Entity(tableName = "favorite")
+data class Favorite (
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(name = "departure_code")
+    val departureCode: String,
+    @ColumnInfo(name = "destination_code")
+    val destinationCode: String
+)
+
+data class Flight(
+    val departure: Airport,
+    val destination: Airport,
+    var favorite: Boolean = false
+)
