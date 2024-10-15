@@ -27,7 +27,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.flightsearchapp.R
-import com.example.flightsearchapp.ui.home.HomeViewModel
+import com.example.flightsearchapp.ui.home.viewModel.HomeViewModel
 import com.example.flightsearchapp.ui.theme.color_silver
 import com.example.flightsearchapp.ui.theme.color_soft_silver
 

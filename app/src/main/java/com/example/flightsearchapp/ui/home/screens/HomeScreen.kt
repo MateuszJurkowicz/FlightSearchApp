@@ -1,20 +1,12 @@
-package com.example.flightsearchapp.ui.home
+package com.example.flightsearchapp.ui.home.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -31,16 +23,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flightsearchapp.R
-import com.example.flightsearchapp.data.Airport
+import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.airport.Flight
 import com.example.flightsearchapp.ui.AppViewModelProvider
-import com.example.flightsearchapp.ui.components.FlightSearchTopAppBar
+import com.example.flightsearchapp.ui.components.AppTopBar
 import com.example.flightsearchapp.ui.components.SearchInputField
+import com.example.flightsearchapp.ui.home.viewModel.HomeViewModel
 import com.example.flightsearchapp.ui.navigation.NavigationDestination
 
 object HomeDestination : NavigationDestination {
@@ -72,16 +64,8 @@ fun HomeScreen(
             viewModel.revertToInitialState()
             keyboardController?.hide()
         },
-        onItemClicked = {
-            viewModel.onItemClicked(
-                Airport(
-                    id = it.id,
-                    name = it.name,
-                    iataCode = it.iataCode,
-                    passengers = it.passengers
-                )
-            )
-        }
+        onItemClicked = viewModel::onItemClicked,
+        onFavoriteClicked = viewModel::onFavoriteClicked,
     )
 }
 
@@ -95,14 +79,15 @@ fun SearchScreenLayout(
     onSearchInputClicked: () -> Unit,
     onClearInputClicked: () -> Unit,
     onChevronClicked: () -> Unit,
-    onItemClicked: (Airport) -> Unit
+    onItemClicked: (Airport) -> Unit,
+    onFavoriteClicked: (flight: Flight) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            FlightSearchTopAppBar(
+            AppTopBar(
                 title = stringResource(HomeDestination.titleRes),
                 canNavigateBack = false,
                 scrollBehavior = scrollBehavior,
@@ -125,12 +110,23 @@ fun SearchScreenLayout(
             Spacer(modifier = Modifier.height(20.dp))
             when (viewState) {
                 is HomeViewModel.HomeUiState.IdleScreen -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(id = R.drawable.undraw_search),
-                            contentDescription = "Illustration",
-                            modifier = Modifier.padding(16.dp)
+                    if (viewState.favoritesList.isNotEmpty()) {
+                        FavoritesBody(
+                            favorites = viewState.favoritesList,
+                            onFavoriteClicked = onFavoriteClicked,
+                            modifier = Modifier.fillMaxSize(),
                         )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.undraw_search),
+                                contentDescription = "Illustration",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
                     }
                 }
 
@@ -148,7 +144,7 @@ fun SearchScreenLayout(
 
                 is HomeViewModel.HomeUiState.NoResults -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "No results for this input :(")
+                        Text(text = "No results for this input")
                     }
                 }
 
@@ -160,13 +156,16 @@ fun SearchScreenLayout(
                         onItemClicked = onItemClicked
                     )
                 }
+
                 is HomeViewModel.HomeUiState.SearchResultClicked -> {
-                    val flightsTo by viewState.flightsTo.collectAsState(initial = emptyList()) // Collect the flow
-                    val flightsFrom = viewState.flightsFrom
+                    val flightsFrom = viewState.departingAirport
+                    val flightsTo = viewState.flightsList
                     FlightsBody(
-                        flightsFrom = flightsFrom, // Pass the collected list
+                        flightsFrom = flightsFrom,
                         flightsTo = flightsTo,
+                        onFavoriteClicked = onFavoriteClicked,
                         modifier = Modifier.fillMaxSize(),
+//                        viewModel = viewModel
                     )
                 }
             }

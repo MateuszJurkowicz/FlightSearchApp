@@ -18,3 +18,5 @@ val color_dark_silver = Color(0xFF969696)
 
 val color_blue = Color(0xFF28303D)
 val color_dark_blue = Color(0xFF21252A)
+
+val color_gold = Color(0xFFD6B500)

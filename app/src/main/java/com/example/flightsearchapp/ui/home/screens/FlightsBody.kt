@@ -1,4 +1,4 @@
-package com.example.flightsearchapp.ui.home
+package com.example.flightsearchapp.ui.home.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +23,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,20 +33,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.flightsearchapp.R
-import com.example.flightsearchapp.data.Airport
+import com.example.flightsearchapp.data.airport.Airport
+import com.example.flightsearchapp.data.airport.Flight
 import com.example.flightsearchapp.ui.theme.color_dark_silver
+import com.example.flightsearchapp.ui.theme.color_gold
 import com.example.flightsearchapp.ui.theme.color_silver
-import com.example.flightsearchapp.ui.theme.color_soft_silver
 
 @Composable
-fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifier = Modifier) {
+fun FlightsBody(
+    flightsFrom: Airport,
+    flightsTo: List<Flight>,
+    onFavoriteClicked: (flight: Flight) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column()
     {
         Text(
-            text = "Flights from ${flightsFrom.iataCode}",
+            text = "Flights from ${flightsFrom.name}",
             modifier = Modifier
                 .padding(start = 16.dp, bottom = 12.dp),
             style = MaterialTheme.typography.titleMedium
@@ -52,10 +60,10 @@ fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifi
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = modifier.fillMaxSize()
         ) {
-            items(items = flightsTo, key = { it.id }) { flightTo ->
+            items(items = flightsTo) { flight ->
                 FlightCard(
-                    flightFrom = flightsFrom,
-                    flightTo = flightTo
+                    flight = flight,
+                    onFavoriteClicked = onFavoriteClicked,
                 )
             }
         }
@@ -63,7 +71,11 @@ fun FlightsBody(flightsFrom: Airport, flightsTo: List<Airport>, modifier: Modifi
 }
 
 @Composable
-fun FlightCard(flightFrom: Airport, flightTo: Airport) {
+fun FlightCard(
+    flight: Flight,
+    onFavoriteClicked: (flight: Flight) -> Unit,
+) {
+
     Card(
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp)
@@ -76,9 +88,10 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
     {
         Row(modifier = Modifier.fillMaxWidth())
         {
-            Column(modifier = Modifier
-                .padding(16.dp)
-                .weight(1f)
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f)
             )
             {
                 Text(
@@ -92,14 +105,14 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
                 ) {
 
                     Text(
-                        text = flightFrom.iataCode,
+                        text = flight.departure.iataCode,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        text = flightFrom.name,
+                        text = flight.departure.name,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -116,14 +129,14 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = flightTo.iataCode,
+                        text = flight.destination.iataCode,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        text = flightTo.name,
+                        text = flight.destination.name,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -136,13 +149,16 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
                 contentAlignment = Alignment.Center,
             )
             {
+                val iconColor by remember { mutableStateOf(if (flight.favorite) color_gold else color_dark_silver) }
                 IconButton(
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        onFavoriteClicked(flight)
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = stringResource(id = R.string.favorite_button),
-                        tint = color_dark_silver,
+                        tint = iconColor,
                         modifier = Modifier.size(100.dp)
                     )
                 }
@@ -151,14 +167,14 @@ fun FlightCard(flightFrom: Airport, flightTo: Airport) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun FlightsBodyPreview() {
-    FlightsBody(
-        flightsFrom = Airport(1, "Warsaw Airport", "COA", 911),
-        flightsTo = listOf(
-            Airport(2, "Decatur Central Airport", "DEC", 855),
-            Airport(3, "Indonesia International Airport", "IND", 855),
-        )
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun FlightsBodyPreview() {
+//    FlightsBody(
+//        departingAirport = Airport(1, "Warsaw Airport", "COA", 911),
+//        destinationAirports = listOf(
+//            Airport(2, "Decatur Central Airport", "DEC", 855),
+//            Airport(3, "Indonesia International Airport", "IND", 855),
+//        ),
+//    )
+//}

@@ -1,13 +1,14 @@
 package com.example.flightsearchapp.data
 
 import android.content.Context
+import com.example.flightsearchapp.data.airport.AirportRepository
 
 interface AppContainer {
-    val flightsRepository: AirportsRepository
+    val airportRepository: AirportRepository
 }
 
 class AppDataContainer(private val context: Context) : AppContainer {
-    override val flightsRepository: AirportsRepository by lazy {
-        OfflineAirportsRepository(FlightSearchDatabase.getDatabase(context).airportDao())
+    override val airportRepository: AirportRepository by lazy {
+        AirportRepository(FlightSearchDatabase.getDatabase(context).airportDao())
     }
 }
