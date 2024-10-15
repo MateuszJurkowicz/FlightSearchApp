@@ -1,4 +1,4 @@
-# This Android application provides a user-friendly interface for searching and exploring flights. Users can easily search for flights between airports using airport codes or names, and view detailed information about flights, including departure and arrival times. 
+# Flight Search App
 
 ## Features
 
