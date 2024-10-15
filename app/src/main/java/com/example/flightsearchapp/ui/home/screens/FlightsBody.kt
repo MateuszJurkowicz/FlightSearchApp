@@ -55,7 +55,7 @@ fun FlightsBody(
     Column()
     {
         Text(
-            text = "Flights from ${flightsFrom.iataCode}",
+            text = "Flights from ${flightsFrom.name}",
             modifier = Modifier
                 .padding(start = 16.dp, bottom = 12.dp),
             style = MaterialTheme.typography.titleMedium
@@ -153,7 +153,7 @@ fun FlightCard(
                 contentAlignment = Alignment.Center,
             )
             {
-                val iconColor: Color by remember { mutableStateOf(if (flight.favorite) color_gold else color_dark_silver) }
+                val iconColor by remember { mutableStateOf(if (flight.favorite) color_gold else color_dark_silver) }
                 IconButton(
                     onClick = {
                         onFavoriteClicked(flight)

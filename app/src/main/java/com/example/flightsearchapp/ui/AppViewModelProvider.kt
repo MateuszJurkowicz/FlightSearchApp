@@ -13,7 +13,8 @@ object AppViewModelProvider {
         initializer {
             HomeViewModel(
                 GetSearchResults(flightSearchApplication().container.airportRepository),
-                flightSearchApplication().container.airportRepository
+                flightSearchApplication().container.airportRepository,
+                flightSearchApplication().searchBarRepository
             )
         }
     }

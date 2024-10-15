@@ -3,6 +3,7 @@ package com.example.flightsearchapp.ui.home.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.flightsearchapp.data.SearchBarRepository
 import com.example.flightsearchapp.data.airport.Airport
 import com.example.flightsearchapp.data.airport.AirportRepository
 import com.example.flightsearchapp.data.airport.Favorite
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -21,7 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class HomeViewModel(
     private val getSearchResults: GetSearchResults,
-    private val airportRepository: AirportRepository
+    private val airportRepository: AirportRepository,
+    private val searchBarRepository: SearchBarRepository
 ) : ViewModel() {
 
     sealed interface HomeUiState {
@@ -69,10 +72,8 @@ class HomeViewModel(
                         )
                     )
             }
-
             _homeUiState.update {
                 HomeUiState.IdleScreen(favoritesList = favoritesList)
-
             }
         }
     }
@@ -88,6 +89,7 @@ class HomeViewModel(
     fun initialize() {
         if (isInitialized.compareAndSet(false, true)) {
             viewModelScope.launch {
+                loadSearchQuery()
                 inputText.debounce(timeoutMillis = TIMEOUT_MILLIS).collectLatest { input ->
                     if (input.blankOrEmpty()) {
                         getFavoriteFlights()
@@ -115,6 +117,9 @@ class HomeViewModel(
 
     fun updateInput(inputText: String) {
         _inputText.update { inputText }
+        viewModelScope.launch {
+            searchBarRepository.saveSearchQueryToDataStore(inputText)
+        }
         activateSearchField()
 
         if (inputText.blankOrEmpty().not()) {
@@ -165,10 +170,10 @@ class HomeViewModel(
         }
     }
 
-
     fun onFavoriteClicked(flight: Flight) {
         viewModelScope.launch {
             val favorite = getFavorite(flight.departure.iataCode, flight.destination.iataCode)
+            Log.d("Favorite", "onFavoriteClicked: $favorite")
             if (favorite == null) {
                 flight.favorite = true
                 airportRepository.insertFavorite(
@@ -181,6 +186,7 @@ class HomeViewModel(
                 airportRepository.deleteFavorite(favorite)
                 flight.favorite = false
             }
+            Log.d("Favorite", "Flight Favorite: ${flight.favorite}")
         }
     }
 
@@ -189,6 +195,19 @@ class HomeViewModel(
             departureCode = departureCode,
             destinationCode = destinationCode
         ).firstOrNull()
+    }
+
+    private suspend fun loadSearchQuery() {
+        val searchQuery = searchBarRepository.searchQuery.first()
+        Log.d("SearchBar", "loadSearchQuery: $searchQuery")
+        _inputText.update { searchQuery }
+
+        if (searchQuery.isNotBlank()) {
+            // Update UI state based on loaded query
+            _homeUiState.update { HomeUiState.Loading } // Or a more appropriate state
+            // Trigger search or data loading based on searchQuery
+            // ... (e.g., call getSearchResults(searchQuery)) ...
+        }
     }
 
     private fun String.blankOrEmpty() = this.isBlank() || this.isEmpty()
