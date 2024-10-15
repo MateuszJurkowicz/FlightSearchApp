@@ -26,11 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,8 +37,6 @@ import androidx.compose.ui.unit.dp
 import com.example.flightsearchapp.R
 import com.example.flightsearchapp.data.airport.Airport
 import com.example.flightsearchapp.data.airport.Flight
-import com.example.flightsearchapp.ui.home.viewModel.HomeViewModel
-import com.example.flightsearchapp.ui.theme.color_blue
 import com.example.flightsearchapp.ui.theme.color_dark_silver
 import com.example.flightsearchapp.ui.theme.color_gold
 import com.example.flightsearchapp.ui.theme.color_silver
